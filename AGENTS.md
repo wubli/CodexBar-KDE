@@ -18,9 +18,10 @@ learned the hard way; follow them instead of rediscovering the failures.
   `--provider` flag takes a single id only (no comma lists) — one process per
   selected provider.
 - Design invariants: radial two-ring gauges stay (outer = session, inner =
-  weekly, percent used); cached background refresh must never blank the
-  panel; default provider selection is `codex,claude` so a fresh install
-  shows checkboxes pre-selected in the settings.
+  weekly, percent used); gauges show the percentage by default and the
+  unique short provider prefix only while hovered; cached background refresh
+  must never blank the panel; default provider selection is `codex,claude` so
+  a fresh install shows checkboxes pre-selected in the settings.
 
 ## Testing on this machine
 

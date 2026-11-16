@@ -106,6 +106,114 @@ function shortName(id) {
     return base.charAt(0).toUpperCase() + base.slice(1).toLowerCase();
 }
 
+function providerLabelSource(value) {
+    var text = value === null || value === undefined ? "" : String(value);
+    text = text.replace(/[^\p{L}\p{N} ]/gu, "");
+    text = text.replace(/ +/g, " ").trim();
+    return text || "?";
+}
+
+function commonPrefixLength(left, right) {
+    var limit = Math.min(left.length, right.length);
+    var i = 0;
+    while (i < limit && left.charAt(i).toLowerCase() === right.charAt(i).toLowerCase()) {
+        i++;
+    }
+    return i;
+}
+
+function formatProviderLabel(source) {
+    return source.charAt(0).toUpperCase() + source.slice(1);
+}
+
+function providerLabels(models) {
+    var entries = [];
+    var input = Array.isArray(models) ? models : [];
+    for (var i = 0; i < input.length; i++) {
+        var model = input[i] || {};
+        var id = model.id === null || model.id === undefined ? "" : String(model.id);
+        var name = model.name === null || model.name === undefined || String(model.name).trim() === ""
+            ? id
+            : model.name;
+        entries.push({
+            id: id,
+            source: providerLabelSource(name),
+        });
+    }
+    entries.sort(function(a, b) {
+        return a.id.localeCompare(b.id) || a.source.localeCompare(b.source);
+    });
+
+    var labels = [];
+    for (var j = 0; j < entries.length; j++) {
+        var length = 1;
+        for (var k = 0; k < entries.length; k++) {
+            if (j === k) {
+                continue;
+            }
+            length = Math.max(length, commonPrefixLength(
+                entries[j].source,
+                entries[k].source) + 1);
+        }
+        length = Math.min(length, entries[j].source.length);
+        labels.push(formatProviderLabel(entries[j].source.slice(0, length)));
+    }
+
+    var conflicts = {};
+    for (var n = 0; n < labels.length; n++) {
+        var key = labels[n].toLowerCase();
+        if (!conflicts[key]) {
+            conflicts[key] = [];
+        }
+        conflicts[key].push(n);
+    }
+
+    var fallback = {};
+    for (var groupKey in conflicts) {
+        var group = conflicts[groupKey];
+        if (group.length > 1) {
+            for (var c = 0; c < group.length; c++) {
+                fallback[group[c]] = true;
+            }
+        }
+    }
+    for (var left = 0; left < entries.length; left++) {
+        for (var right = left + 1; right < entries.length; right++) {
+            var common = commonPrefixLength(entries[left].source, entries[right].source);
+            if (common === Math.min(entries[left].source.length, entries[right].source.length)) {
+                fallback[left] = true;
+                fallback[right] = true;
+            }
+        }
+    }
+
+    var used = {};
+    for (var p = 0; p < labels.length; p++) {
+        if (!fallback[p]) {
+            used[labels[p].toLowerCase()] = true;
+        }
+    }
+    for (var q = 0; q < entries.length; q++) {
+        if (!fallback[q]) {
+            continue;
+        }
+        var candidate = shortName(entries[q].id) || "?";
+        var suffix = 2;
+        while (used[candidate.toLowerCase()]) {
+            candidate = shortName(entries[q].id) + suffix;
+            suffix++;
+        }
+        used[candidate.toLowerCase()] = true;
+        labels[q] = candidate;
+    }
+
+    var result = {};
+    for (var r = 0; r < entries.length; r++) {
+        result[entries[r].id] = labels[r] || "?";
+    }
+    return result;
+}
+
 function windowLabel(windowMinutes) {
     if (windowMinutes === null || windowMinutes === undefined) {
         return "Usage";
@@ -526,6 +634,7 @@ if (typeof module !== "undefined" && module.exports) {
         PROVIDER_CATALOG: PROVIDER_CATALOG,
         providerDisplayName: providerDisplayName,
         shortName: shortName,
+        providerLabels: providerLabels,
         windowLabel: windowLabel,
         usageStage: usageStage,
         formatCountdown: formatCountdown,

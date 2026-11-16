@@ -14,12 +14,17 @@ Item {
     property color innerColor: "#f67400"
     property string centerText: ""
     property real centerTextScale: 0.32
+    property bool hovered: hoverHandler.hovered
 
     readonly property real ringWidth: Math.max(2, Math.min(width, height) / 15)
     readonly property real ringGap: ringWidth * 1.2
     readonly property real outerRadius: (Math.min(width, height) - ringWidth) / 2
     readonly property real innerRadius: outerRadius - ringWidth - ringGap
     readonly property color trackColor: Qt.alpha(Kirigami.Theme.textColor, 0.18)
+
+    HoverHandler {
+        id: hoverHandler
+    }
 
     Shape {
         anchors.fill: parent

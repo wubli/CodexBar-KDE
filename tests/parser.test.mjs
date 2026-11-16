@@ -161,6 +161,79 @@ test("shortName: compact provider badge", () => {
     assert.equal(parser.shortName("wayfinder"), "Wa");
 });
 
+test("providerLabels: a single provider gets one initial", () => {
+    assert.deepEqual(parser.providerLabels([{ id: "codex", name: "Codex" }]), { codex: "C" });
+    assert.deepEqual(parser.providerLabels([{ id: "claude", name: "Claude" }]), { claude: "C" });
+    assert.deepEqual(parser.providerLabels([{ id: "zai", name: "z.ai" }]), { zai: "Z" });
+});
+
+test("providerLabels: different initials stay one character", () => {
+    assert.deepEqual(parser.providerLabels([
+        { id: "codex", name: "Codex" },
+        { id: "gemini", name: "Gemini" },
+    ]), { codex: "C", gemini: "G" });
+});
+
+test("providerLabels: shared initials grow minimally and mutually", () => {
+    assert.deepEqual(parser.providerLabels([
+        { id: "codex", name: "Codex" },
+        { id: "claude", name: "Claude" },
+    ]), { codex: "Co", claude: "Cl" });
+    assert.deepEqual(parser.providerLabels([
+        { id: "codex", name: "Codex" },
+        { id: "claude", name: "Claude" },
+        { id: "cursor", name: "Cursor" },
+        { id: "copilot", name: "Copilot" },
+    ]), { codex: "Cod", claude: "Cl", cursor: "Cu", copilot: "Cop" });
+});
+
+test("providerLabels: input order does not change labels", () => {
+    const first = parser.providerLabels([
+        { id: "codex", name: "Codex" },
+        { id: "claude", name: "Claude" },
+        { id: "cursor", name: "Cursor" },
+    ]);
+    const second = parser.providerLabels([
+        { id: "cursor", name: "Cursor" },
+        { id: "codex", name: "Codex" },
+        { id: "claude", name: "Claude" },
+    ]);
+    assert.deepEqual(second, first);
+});
+
+test("providerLabels: comparison is case-insensitive", () => {
+    assert.deepEqual(parser.providerLabels([
+        { id: "lower", name: "codex" },
+        { id: "upper", name: "Codex" },
+    ]), { lower: "Lo", upper: "Up" });
+});
+
+test("providerLabels: prefix names use deterministic id fallbacks", () => {
+    const labels = parser.providerLabels([
+        { id: "kimi", name: "Kimi" },
+        { id: "kimik2", name: "Kimi K2 (unofficial)" },
+    ]);
+    assert.deepEqual(labels, { kimi: "Ki", kimik2: "Ki2" });
+});
+
+test("providerLabels: empty and unknown names never produce blank labels", () => {
+    const labels = parser.providerLabels([
+        { id: "mystery-provider", name: "" },
+        { id: "other", name: null },
+        { id: "", name: "" },
+    ]);
+    for (const label of Object.values(labels)) {
+        assert.ok(label.length > 0);
+    }
+    assert.equal(labels["mystery-provider"], "M");
+});
+
+test("providerLabels: only the passed providers affect uniqueness", () => {
+    assert.deepEqual(parser.providerLabels([
+        { id: "claude", name: "Claude" },
+    ]), { claude: "C" });
+});
+
 test("providerDisplayName: catalog lookup with id fallback", () => {
     assert.equal(parser.providerDisplayName("codex"), "Codex");
     assert.equal(parser.providerDisplayName("zai"), "z.ai");

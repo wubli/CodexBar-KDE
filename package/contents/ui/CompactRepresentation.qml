@@ -15,6 +15,7 @@ Item {
         ? Math.min(compact.width, Kirigami.Units.gridUnit * 2.4)
         : Math.min(compact.height, Kirigami.Units.gridUnit * 2.4)
     readonly property int count: Math.max(1, root.models.length)
+    readonly property var labels: Parser.providerLabels(root.models)
 
     Layout.minimumWidth: compact.vertical ? compact.gaugeSize : compact.count * (compact.gaugeSize + gaugeGrid.spacing)
     Layout.minimumHeight: compact.vertical ? compact.count * (compact.gaugeSize + gaugeGrid.spacing) : compact.gaugeSize
@@ -41,6 +42,8 @@ Item {
                 required property var modelData
                 readonly property var rings: Parser.gaugeRings(modelData)
                 readonly property int centerPercent: Parser.gaugeCenterPercent(modelData)
+                readonly property string hoverLabel: compact.labels[modelData.id]
+                    || Parser.shortName(modelData.id)
 
                 width: compact.gaugeSize
                 height: compact.gaugeSize
@@ -50,10 +53,16 @@ Item {
                     ? modelData.windows[rings.outerIdx].usedPercent : -1
                 innerPercent: rings.innerIdx >= 0
                     ? modelData.windows[rings.innerIdx].usedPercent : -1
-                centerText: modelData.error
-                    ? "!"
-                    : (meter.centerPercent >= 0 ? String(meter.centerPercent) : "")
-                centerTextScale: 0.34
+                centerText: meter.hovered
+                    ? meter.hoverLabel
+                    : (modelData.error
+                        ? "!"
+                        : (meter.centerPercent >= 0 ? String(meter.centerPercent) : ""))
+                centerTextScale: meter.hovered
+                    ? (meter.hoverLabel.length <= 1
+                        ? 0.36
+                        : (meter.hoverLabel.length === 2 ? 0.30 : 0.22))
+                    : 0.34
             }
         }
     }

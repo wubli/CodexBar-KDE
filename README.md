@@ -81,9 +81,10 @@ Plasma "executable" data engine on a timer, parses the JSON payloads in
   System Monitor sensor widget. Outer ring = session window, inner ring =
   weekly window; both show percent **used** (the ring fills up as quota is
   consumed). The center number is the session percent used (weekly when there
-  is no session lane); `!` marks a provider error. Ring colors are
-  theme-aware: blue session and orange weekly, adjusted for light and dark
-  color schemes.
+  is no session lane) by default; hovering a gauge shows that provider's
+  unique short provider prefix, and `!` marks a provider error when not
+  hovered. Ring colors are theme-aware: blue session and orange weekly,
+  adjusted for light and dark color schemes.
 - **Full (popup/desktop)**: one card per provider with the full provider name,
   the same radial gauge, and a legend with ring-colored dots per rate window
   (Session/Weekly/Monthly plus named lanes such as Codex Spark or Code
