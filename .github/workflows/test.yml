@@ -1,0 +1,33 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run tests
+        run: node --test
+
+      - name: Build .plasmoid artifact
+        run: make dist
+
+      - name: Upload .plasmoid artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: org.rpa.codexbar-plasmoid
+          path: org.rpa.codexbar-v*.plasmoid
+          if-no-files-found: error
